@@ -21,11 +21,22 @@ def build_modelica_model(usr_dir, fname, additionalLibs="", extension=".mo", ):
     cmd_compile = os.path.join(omc_dir, 'bin',
                                'omc') + ' +q +s "' + full_path_fname + '" "' + additionalLibs + '" ModelicaServices Modelica'
 
+    # Get the package name, if applicable
+    if additionalLibs != "":
+        addl_lib_filename = os.path.basename(additionalLibs)
+        if addl_lib_filename == "package.mo":
+            addl_lib_filename = os.path.basename(os.path.dirname(additionalLibs))
+        elif addl_lib_filename.endswith(".mo"):
+            addl_lib_filename = os.path.splitext(os.path.basename(addl_lib_filename))[0]
+
+        cmd_compile += " " + addl_lib_filename
+
+    print 'cmd_compile: ', cmd_compile
+    subprocess.call(cmd_compile, shell=True)
+
     print 'Flat model and generated code are ready. (' + full_path_fname + ')'
 
     print 'Compiling the code into an executable package. (' + fname + ')'
-
-    subprocess.call(cmd_compile, shell=True)
 
     subprocess.call('make -f ' + fname + '.makefile', shell=True)
 
