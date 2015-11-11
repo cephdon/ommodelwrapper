@@ -4,15 +4,17 @@ import nose
 import logging
 import sys
 import os
-from openmdao.util.testutil import assert_raises, assert_rel_error
+from openmdao.core.problem import Problem, Group
+from openmdao.recorders.dump_recorder import DumpRecorder
 
 
 class OMModelWrapperTestCase(unittest.TestCase):
     def setUp(self):
-        if os.name != 'nt':
-            raise nose.SkipTest('Sorry, OMModelWrapper has only been validated on Windows.')
-        if os.name == 'posix':
-            raise nose.SkipTest('Sorry, OMModelWrapper has only been validated on Windows.')
+        #if os.name != 'nt':
+        #    raise nose.SkipTest('Sorry, OMModelWrapper has only been validated on Windows.')
+        #if os.name == 'posix':
+        #    raise nose.SkipTest('Sorry, OMModelWrapper has only been validated on Windows.')
+        pass
 
     def tearDown(self):
         pass
@@ -22,12 +24,26 @@ class OMModelWrapperTestCase(unittest.TestCase):
         logging.debug('test_OMModelWrapper')
 
         from ommodelwrapper.ommodelwrapper import OMModelWrapper
-        testModel = OMModelWrapper('SimAcceleration', 'VehicleDesign.mo')
-        testModel.stopTime = 10
-        testModel.execute()
-        assert_rel_error(self, testModel.accel_time[-1], 6.935, 0.01)
-        del (testModel)
-        os._exit(1)
+
+        problem = Problem()
+        root = problem.root = Group()
+        test_model = OMModelWrapper('SimAcceleration', 'VehicleDesign.mo')
+        root.add('simacceleration', test_model)
+
+        recorder = DumpRecorder()
+        recorder.options['record_params'] = True
+        recorder.options['record_metadata'] = True
+        recorder.options['record_resids'] = True
+        problem.driver.add_recorder(recorder)
+
+        problem.setup()
+        problem.run()
+
+        problem.driver.recorders[0].close()
+
+        # assert_rel_error(self, testModel.accel_time[-1], 6.935, 0.01)
+        # del (testModel)
+        # os._exit(1)
 
 
 if __name__ == "__main__":

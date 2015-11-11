@@ -27,6 +27,6 @@ def build_modelica_model(usr_dir, fname, additionalLibs="", extension=".mo", ):
 
     subprocess.call(cmd_compile, shell=True)
 
-    subprocess.call(os.path.join(omc_dir, 'mingw', 'bin', 'mingw32-make') + ' -f ' + fname + '.makefile', shell=True)
+    subprocess.call('make -f ' + fname + '.makefile', shell=True)
 
     print 'Done. (' + full_path_fname + ')'

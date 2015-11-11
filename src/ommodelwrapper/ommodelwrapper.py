@@ -66,6 +66,7 @@ class OMModelWrapper(Component):
         # Get the simulation settings
         sim_set = etree.find("DefaultExperiment").attrib
         for param_name in ['startTime', 'stopTime', 'stepSize', 'tolerance', 'solver']:
+            print (param_name, sim_set[param_name])
             self.add_param(param_name, val=sim_set[param_name])
 
         # Model param inputs
@@ -80,7 +81,7 @@ class OMModelWrapper(Component):
                     self.add_param(name, val=value)
                 elif var.find('Integer') is not None:
                     value = int(var.find('Integer').attrib['start'])
-                    self.add(name, val=value)
+                    self.add_param(name, val=value)
                 elif var.find('Boolean') is not None:
                     if var.find('Boolean').attrib['start'] == "0.0":
                         value = 0
@@ -92,8 +93,7 @@ class OMModelWrapper(Component):
         # Next, outputs are found. Any variables except "parameters" in the
         # model file becomes output.
         for var in model_variables:
-            if (file_name in var.attrib['fileName']) and \
-                            var.attrib['variability'] != "parameter":
+            if (file_name in var.attrib['fileName']) and var.attrib['variability'] != "parameter":
                 name = var.attrib['name']
                 print ' ', name
 
@@ -106,12 +106,12 @@ class OMModelWrapper(Component):
                     val = 0
 
                 try:
-                    self.add_output(name, val=val)
+                    self.add_output(name, val=val, pass_by_obj=True)
                     self._var_attrib += [name]
                 except:
                     pass
 
-        self.add_output('time', val=0.0)
+        self.add_output('time', val=0.0, pass_by_obj=True)
         self._var_attrib += ['time']
 
     def solve_nonlinear(self, params, unknowns, resids):
@@ -132,16 +132,18 @@ class OMModelWrapper(Component):
         # Update the parameters to the element tree
         prm_dict = {}
         for prm_name in self._prm_attrib:
+            print 'PARAMETER: ', prm_name, params[prm_name]
             prm_dict[prm_name] = params[prm_name]
         lmm.change_parameter(etree, prm_dict)
 
         # Rebuild _init.xml with the updated element tree
         etree.write(self._init_xml)
-        subprocess.call([self.moFile + '.exe'], shell=True)
+        subprocess.call([os.path.join(os.getcwd(), self.moFile)], shell=True)
 
         # Obtain the result from the result (.mat) file
         dd, desc = lmm.load_mat(self.moFile + '_res.mat')
         for var_name in self._var_attrib:
+            print 'dd[' + var_name + '] = ', dd[var_name]
             unknowns[var_name] = dd[var_name]
 
 
