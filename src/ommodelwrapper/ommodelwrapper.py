@@ -43,7 +43,7 @@ class OMModelWrapper(Component):
         Simulation solver accuracy (float)
         
     solver
-        Name of the chosen solver, which OpenModelica supports (string)
+        Name of the chosen OpenModelica-supported solver (string)
         
     Additional attributes will be accessible based on the parameter/variable
     definitions of the original OpenModelica to be wrapped.    
@@ -57,7 +57,7 @@ class OMModelWrapper(Component):
         self._var_attrib = []
         self._wdir = os.getcwd()
 
-        OM_build.build_modelica_model(usr_dir=self._wdir, fully_qualified_class_name=fully_qualified_class_name, additionalLibs=addl_pkg_abs_path)
+        OM_build.build_modelica_model(usr_dir=self._wdir, fully_qualified_class_name=fully_qualified_class_name, additional_libs=addl_pkg_abs_path)
         self._init_xml = self.class_name + "_init.xml"
         try:
             etree = lmm.get_etree(self._init_xml)

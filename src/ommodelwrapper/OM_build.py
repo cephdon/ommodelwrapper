@@ -3,7 +3,7 @@ import sys
 import subprocess
 
 
-def build_modelica_model(usr_dir, fully_qualified_class_name, additionalLibs="", extension=".mo", ):
+def build_modelica_model(usr_dir, fully_qualified_class_name, additional_libs="", extension=".mo", ):
     cur_dir = os.getcwd()
     omc_dir = os.getenv('OPENMODELICAHOME')
     print cur_dir, omc_dir
@@ -13,17 +13,17 @@ def build_modelica_model(usr_dir, fully_qualified_class_name, additionalLibs="",
     class_name = fully_qualified_class_name.split('.')[-1]
 
     # make the compiler happy
-    additionalLibs = additionalLibs.replace("\\", "/")
+    additional_libs = additional_libs.replace("\\", "/")
 
     print 'Generating flat modelica model and source code. (' + fully_qualified_class_name + ')'
 
     # Get the package name, if applicable
-    if additionalLibs != "":
-        addl_lib_filename = os.path.basename(additionalLibs)
-        library_path = os.path.dirname(additionalLibs)
+    if additional_libs != "":
+        addl_lib_filename = os.path.basename(additional_libs)
+        library_path = os.path.dirname(additional_libs)
 
         if addl_lib_filename == "package.mo":
-            addl_lib_filename = os.path.basename(os.path.dirname(additionalLibs))
+            addl_lib_filename = os.path.basename(os.path.dirname(additional_libs))
             library_path = os.path.dirname(library_path)
 
         elif addl_lib_filename.endswith(".mo"):
@@ -32,7 +32,7 @@ def build_modelica_model(usr_dir, fully_qualified_class_name, additionalLibs="",
     mos_lines = []
     mos_lines.append("// OpenModelica script file to run a model")
     mos_lines.append("loadModel(Modelica, { \"3.2.1\" });")
-    if additionalLibs != "":
+    if additional_libs != "":
         mos_lines.append("loadModel( %s );" % addl_lib_filename)
     mos_lines.append(
         "translateModel( %s, fileNamePrefix=\"%s\" );" % (fully_qualified_class_name, class_name))
@@ -47,7 +47,7 @@ def build_modelica_model(usr_dir, fully_qualified_class_name, additionalLibs="",
 
     my_env = os.environ
     lib_paths = ""
-    if additionalLibs != "":
+    if additional_libs != "":
         lib_paths = library_path
 
     if 'OPENMODELICALIBRARY' in my_env:

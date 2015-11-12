@@ -19,16 +19,16 @@ where
 
 ::
 
-  moFile: main model file name in String. `.mo` is not included 
+  moFile:   main model file name in String. `.mo` should not be included.
     
-  pkgName: additional `.mo` file or library name in String 
-               (`.mo` must be included if it's in the name.)
-               More than one package is not supported yet.
+  addl_pkg_abs_path:  additional .mo file or library name in String
+                      ('.mo' must be included if there is in the name)
+                      More than one package is not supported yet.
+                      Must be absolute path
 
-The following attributes are created for all OpenModelica wrapping applications:    
+The following parameters are created for all OpenModelica wrapping applications:
     
 **startTime**
-    
     Simulation start time (float)
 
 **stopTime**
@@ -42,10 +42,7 @@ The following attributes are created for all OpenModelica wrapping applications:
     
 **solver**
     Name of the chosen solver, which OpenModelica supports (string) 
-    
-**execute(...)**
-    Execute the model and update the output
-    
+
 With all the above, additional attributes will be accessible based on the parameter/variable
 definitions of the original OpenModelica to be wrapped.    
 
@@ -64,7 +61,9 @@ model, you write in your script:
 
 ::
 
-  testModel = OMModelWrapper('SimAcceleration','VehicleDesign.mo')  
+  testModel = OMModelWrapper('SimAcceleration','<repository_root>/src/ommodelwrapper/test/VehicleDesign.mo')
+
+where ``<repository_root>`` is the absolute path to this repository.
 
 This will create the testModel that is an instance of OpenModelica's SimAcceleration model.
 The testModel is ready to use. The following example lines execute the model and
@@ -72,12 +71,15 @@ provide the 0 to 100km/hr time of the car:
 
 ::
 
-  testModel.stopTime = 10
-    
-  testModel.execute()
-    
-  print testModel.accel_time
+    problem = Problem()
+    root = problem.root = Group()
+    test_model = OMModelWrapper('SimAcceleration', addl_lib_path)
+    root.add('simacceleration', test_model)
+    root.add('simtime', IndepVarComp('duration', val='15.0'))
+    root.connect('simtime.duration', 'simacceleration.stopTime')
 
-  (Output is:) 6.935
+    problem.setup()
+    problem.run()
 
+    print 'simacceleration.accel_time: ', problem['simacceleration.accel_time']
 
