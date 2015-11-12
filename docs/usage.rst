@@ -49,7 +49,7 @@ definitions of the original OpenModelica to be wrapped.
 
 Example
 =========
-In the distribution directory ``src/ommodelwrapper/test``, there are two OpenModelica
+In the distribution directory ``ommodelwrapper/test``, there are two OpenModelica
 files, ``SimAcceleration.mo`` and ``VehicleDesign.mo``. The two files are basically
 an OpenModelica translation of the vehicle design example included in OpenMDAO. 
 Of the two files, ``SimAcceleration.mo`` is the main model file, and ``VehicleDesign.mo`` 
@@ -61,7 +61,7 @@ model, you write in your script:
 
 ::
 
-  testModel = OMModelWrapper('SimAcceleration','<repository_root>/src/ommodelwrapper/test/VehicleDesign.mo')
+  testModel = OMModelWrapper('SimAcceleration','<repository_root>/ommodelwrapper/test/VehicleDesign.mo')
 
 where ``<repository_root>`` is the absolute path to this repository.
 
