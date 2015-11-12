@@ -23,9 +23,9 @@ Package Metadata
 
 - **license:** GNU General Public License, version 2
 
-- **maintainer:** Kyungjin Moon
+- **maintainer:** Adam Nagel
 
-- **maintainer-email:** kyungjin.moon@asdl.gatech.edu
+- **maintainer-email:** adam@metamorphsoftware.com
 
 - **name:** ommodelwrapper
 
@@ -33,12 +33,12 @@ Package Metadata
 
 - **requires-python**:: 
 
-    >=2.6
+    >=2.7
     <3.0
 
 - **static_path:** [ '_static' ]
 
 - **summary:** OpenMDAO Component plugin for wrapping OpenModelica model
 
-- **version:** 0.2
+- **version:** 0.3
 
