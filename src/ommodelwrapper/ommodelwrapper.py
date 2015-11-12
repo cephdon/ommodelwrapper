@@ -1,10 +1,8 @@
 __all__ = ['OMModelWrapper']
 
 from openmdao.core.component import Component
-from xml.etree import ElementTree as ET
 import sys
 import os
-import numpy as np
 import load_modelica_mat as lmm
 import OM_build
 import subprocess
@@ -21,11 +19,17 @@ class OMModelWrapper(Component):
     
     OMModelWrapper(moFile[, pkgName]) -> new Python wrapper of OpenModelica model    
         moFile          : main model file name in String. '.mo' is not included 
-        pkgName         : additional .mo file or library name in String 
-                          ('.mo' must be included if there is in the name)
-                          More than one package is not supported yet.
-        
-        
+        addl_pkg_abs_path   : additional .mo file or library name in String
+                              ('.mo' must be included if there is in the name)
+                              More than one package is not supported yet.
+                              Must be absolute path
+
+    solve_nonlinear(...)
+        Execute the model and update the output
+
+    ============
+    This wrapper always adds the following parameter inputs:
+
     startTime
         Simulation start time (float)
     
@@ -39,16 +43,13 @@ class OMModelWrapper(Component):
         Simulation solver accuracy (float)
         
     solver
-        Name of the chosen solver, which OpenModelica supports (string) 
-        
-    execute(...)
-        Execute the model and update the output
+        Name of the chosen solver, which OpenModelica supports (string)
         
     Additional attributes will be accessible based on the parameter/variable
     definitions of the original OpenModelica to be wrapped.    
     """
 
-    def __init__(self, fully_qualified_class_name, pkgName=None):
+    def __init__(self, fully_qualified_class_name, addl_pkg_abs_path=None):
         super(OMModelWrapper, self).__init__()
 
         self.class_name = fully_qualified_class_name.split('.')[-1]
@@ -56,7 +57,7 @@ class OMModelWrapper(Component):
         self._var_attrib = []
         self._wdir = os.getcwd()
 
-        OM_build.build_modelica_model(usr_dir=self._wdir, fully_qualified_class_name=fully_qualified_class_name, additionalLibs=pkgName)
+        OM_build.build_modelica_model(usr_dir=self._wdir, fully_qualified_class_name=fully_qualified_class_name, additionalLibs=addl_pkg_abs_path)
         self._init_xml = self.class_name + "_init.xml"
         try:
             etree = lmm.get_etree(self._init_xml)
@@ -145,16 +146,3 @@ class OMModelWrapper(Component):
         for var_name in self._var_attrib:
             print 'dd[' + var_name + '] = ', dd[var_name]
             unknowns[var_name] = dd[var_name]
-
-
-def main():
-    testModel = OMModelWrapper('SimAcceleration', 'VehicleDesign.mo')
-    testModel.stopTime = 10
-
-    testModel.execute()
-    for i in xrange(testModel.time.size):
-        print testModel.time[i], testModel.accel_time[i]
-
-
-if __name__ == '__main__':
-    main()

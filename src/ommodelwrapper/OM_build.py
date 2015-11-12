@@ -1,7 +1,6 @@
 import os
 import sys
 import subprocess
-import json
 
 
 def build_modelica_model(usr_dir, fully_qualified_class_name, additionalLibs="", extension=".mo", ):
@@ -52,10 +51,10 @@ def build_modelica_model(usr_dir, fully_qualified_class_name, additionalLibs="",
         lib_paths = library_path
 
     if 'OPENMODELICALIBRARY' in my_env:
-        my_env['OPENMODELICALIBRARY'] += os.pathsep + lib_paths
+        my_env['OPENMODELICALIBRARY'] = lib_paths + os.pathsep + my_env['OPENMODELICALIBRARY']
     else:
         om_std_lib = os.path.join(os.environ['OPENMODELICAHOME'], 'lib', 'omlibrary')
-        om_lib = {'OPENMODELICALIBRARY': '{0}{1}{2}'.format(om_std_lib, os.pathsep, lib_paths)}
+        om_lib = {'OPENMODELICALIBRARY': '{0}{1}{2}'.format(lib_paths, os.pathsep, om_std_lib)}
         print "No environment variable OPENMODELICALIBRARY found, created;"
         my_env.update(om_lib)
 
