@@ -1,43 +1,71 @@
 import os
 import sys
 import subprocess
+import json
 
 
-def build_modelica_model(usr_dir, fname, additionalLibs="", extension=".mo", ):
+def build_modelica_model(usr_dir, fully_qualified_class_name, additionalLibs="", extension=".mo", ):
     cur_dir = os.getcwd()
     omc_dir = os.getenv('OPENMODELICAHOME')
     print cur_dir, omc_dir
     if omc_dir is None:
         sys.exit('Can not find OpenModelica directory.')
 
-    full_path_fname = os.path.join(usr_dir, fname + extension)
+    class_name = fully_qualified_class_name.split('.')[-1]
 
     # make the compiler happy
-    full_path_fname = full_path_fname.replace("\\", "/")
     additionalLibs = additionalLibs.replace("\\", "/")
 
-    print 'Generating flat modelica model and source code. (' + full_path_fname + ')'
-
-    cmd_compile = os.path.join(omc_dir, 'bin',
-                               'omc') + ' +q +s "' + full_path_fname + '" "' + additionalLibs + '" ModelicaServices Modelica'
+    print 'Generating flat modelica model and source code. (' + fully_qualified_class_name + ')'
 
     # Get the package name, if applicable
     if additionalLibs != "":
         addl_lib_filename = os.path.basename(additionalLibs)
+        library_path = os.path.dirname(additionalLibs)
+
         if addl_lib_filename == "package.mo":
             addl_lib_filename = os.path.basename(os.path.dirname(additionalLibs))
+            library_path = os.path.dirname(library_path)
+
         elif addl_lib_filename.endswith(".mo"):
             addl_lib_filename = os.path.splitext(os.path.basename(addl_lib_filename))[0]
 
-        cmd_compile += " " + addl_lib_filename
+    mos_lines = []
+    mos_lines.append("// OpenModelica script file to run a model")
+    mos_lines.append("loadModel(Modelica, { \"3.2.1\" });")
+    if additionalLibs != "":
+        mos_lines.append("loadModel( %s );" % addl_lib_filename)
+    mos_lines.append(
+        "translateModel( %s, fileNamePrefix=\"%s\" );" % (fully_qualified_class_name, class_name))
+    mos_lines.append("getErrorString();")
 
-    print 'cmd_compile: ', cmd_compile
-    subprocess.call(cmd_compile, shell=True)
+    mos_content = str.join('\n', mos_lines)
+    mos_filename = "%s.mos" % class_name
+    with open(mos_filename, 'w') as f:
+        f.write(mos_content)
 
-    print 'Flat model and generated code are ready. (' + full_path_fname + ')'
+    cmd_compile = os.path.join(omc_dir, 'bin', 'omc') + ' ' + mos_filename
 
-    print 'Compiling the code into an executable package. (' + fname + ')'
+    my_env = os.environ
+    lib_paths = ""
+    if additionalLibs != "":
+        lib_paths = library_path
 
-    subprocess.call('make -f ' + fname + '.makefile', shell=True)
+    if 'OPENMODELICALIBRARY' in my_env:
+        my_env['OPENMODELICALIBRARY'] += os.pathsep + lib_paths
+    else:
+        om_std_lib = os.path.join(os.environ['OPENMODELICAHOME'], 'lib', 'omlibrary')
+        om_lib = {'OPENMODELICALIBRARY': '{0}{1}{2}'.format(om_std_lib, os.pathsep, lib_paths)}
+        print "No environment variable OPENMODELICALIBRARY found, created;"
+        my_env.update(om_lib)
 
-    print 'Done. (' + full_path_fname + ')'
+    subprocess.call(cmd_compile,
+                    shell=True,
+                    env=my_env)
+
+    print 'Flat model and generated code are ready. (' + fully_qualified_class_name + ')'
+    print 'Compiling the code into an executable package. (' + fully_qualified_class_name + ')'
+
+    subprocess.call('make -f ' + class_name + '.makefile', shell=True)
+
+    print 'Done. (' + fully_qualified_class_name + ')'

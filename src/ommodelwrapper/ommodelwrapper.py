@@ -48,16 +48,16 @@ class OMModelWrapper(Component):
     definitions of the original OpenModelica to be wrapped.    
     """
 
-    def __init__(self, moFile, pkgName=None):
+    def __init__(self, fully_qualified_class_name, pkgName=None):
         super(OMModelWrapper, self).__init__()
 
-        self.moFile = moFile
-        self._init_xml = moFile + "_init.xml"
+        self.class_name = fully_qualified_class_name.split('.')[-1]
         self._prm_attrib = []
         self._var_attrib = []
         self._wdir = os.getcwd()
 
-        OM_build.build_modelica_model(usr_dir=self._wdir, fname=self.moFile, additionalLibs=pkgName)
+        OM_build.build_modelica_model(usr_dir=self._wdir, fully_qualified_class_name=self.class_name, additionalLibs=pkgName)
+        self._init_xml = self.class_name + "_init.xml"
         try:
             etree = lmm.get_etree(self._init_xml)
         except:
@@ -71,7 +71,7 @@ class OMModelWrapper(Component):
 
         # Model param inputs
         model_variables = etree.find("ModelVariables").getchildren()
-        file_name = self.moFile + ".mo"
+        file_name = self.class_name + ".mo"
         for var in model_variables:
             if (file_name in var.attrib['fileName']) and var.attrib['variability'] == "parameter":
                 name = var.attrib['name']
@@ -138,10 +138,10 @@ class OMModelWrapper(Component):
 
         # Rebuild _init.xml with the updated element tree
         etree.write(self._init_xml)
-        subprocess.call([os.path.join(os.getcwd(), self.moFile)], shell=True)
+        subprocess.call([os.path.join(os.getcwd(), self.class_name)], shell=True)
 
         # Obtain the result from the result (.mat) file
-        dd, desc = lmm.load_mat(self.moFile + '_res.mat')
+        dd, desc = lmm.load_mat(self.class_name + '_res.mat')
         for var_name in self._var_attrib:
             print 'dd[' + var_name + '] = ', dd[var_name]
             unknowns[var_name] = dd[var_name]
