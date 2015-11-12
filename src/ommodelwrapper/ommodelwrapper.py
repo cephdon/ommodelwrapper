@@ -56,7 +56,7 @@ class OMModelWrapper(Component):
         self._var_attrib = []
         self._wdir = os.getcwd()
 
-        OM_build.build_modelica_model(usr_dir=self._wdir, fully_qualified_class_name=self.class_name, additionalLibs=pkgName)
+        OM_build.build_modelica_model(usr_dir=self._wdir, fully_qualified_class_name=fully_qualified_class_name, additionalLibs=pkgName)
         self._init_xml = self.class_name + "_init.xml"
         try:
             etree = lmm.get_etree(self._init_xml)
